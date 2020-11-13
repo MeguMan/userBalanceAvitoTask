@@ -2,6 +2,7 @@ package postgres_store
 
 import (
 	"context"
+	"errors"
 	"github.com/MeguMan/userBalanceAvitoTask/internal/model"
 )
 
@@ -9,9 +10,31 @@ type UserRepository struct {
 	store *Store
 }
 
-func (r *UserRepository) Create(u *model.User) (model.User, error) {
-	err := r.store.conn.QueryRow(context.Background(),"INSERT INTO users (balance) VALUES ($1) returning user_id",
-		u.Balance).Scan(&u.ID)
+func (r *UserRepository) AddBalance(u model.User) error {
+	currentBalance, err := r.GetBalanceById(u)
 
-	return *u, err
+	_, err = r.store.conn.Exec(context.Background(),"UPDATE users SET balance=$1 where user_id=$2",
+		currentBalance + u.Balance, u.ID)
+
+	return err
+}
+
+func (r *UserRepository) ReduceBalance(u model.User) error {
+	currentBalance, err := r.GetBalanceById(u)
+	if u.Balance > currentBalance {
+		return errors.New("balance can't be less than 0")
+	}
+
+	_, err = r.store.conn.Exec(context.Background(),"UPDATE users SET balance=$1 where user_id=$2",
+		currentBalance - u.Balance, u.ID)
+
+	return err
+}
+
+func (r *UserRepository) GetBalanceById(u model.User) (int, error) {
+	var balance int
+	err := r.store.conn.QueryRow(context.Background(),"SELECT balance FROM users WHERE user_id=$1",
+		u.ID).Scan(&balance)
+
+	return balance, err
 }
