@@ -37,8 +37,8 @@ func (r *UserRepository) ReduceBalance(u model.User) error {
 	return err
 }
 
-func (r *UserRepository) GetBalanceById(id int) (int, error) {
-	var balance int
+func (r *UserRepository) GetBalanceById(id int) (float64, error) {
+	var balance float64
 	err := r.store.conn.QueryRow(context.Background(),"SELECT balance FROM users WHERE user_id=$1",
 		id).Scan(&balance)
 

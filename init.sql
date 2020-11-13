@@ -1,6 +1,6 @@
 CREATE TABLE users (
     user_id bigserial PRIMARY KEY,
-    balance int
+    balance double precision
 );
 
 INSERT INTO users (user_id) VALUES (0);
